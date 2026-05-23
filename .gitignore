@@ -1,0 +1,20 @@
+# Firebase Secrets (NICHT committen!)
+firebase-config.js
+
+# Betriebssystem-spezifische Dateien
+.DS_Store
+Thumbs.db
+
+# Editor- und IDE-Dateien
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Log-Dateien
+*.log
+npm-debug.log*
+
+# Temporäre Dateien
+*.tmp
+*.temp
