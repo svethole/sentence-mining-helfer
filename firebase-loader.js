@@ -1,4 +1,4 @@
-// firebase-loader.js - für lokale Firebase SDKs (KEINE importScripts mehr)
+// firebase-loader.js - für lokale Firebase SDKs
 
 // Firebase initialisieren (globale firebase Variable wird von den SDKs bereitgestellt)
 const app = firebase.initializeApp(firebaseConfig);
@@ -21,74 +21,134 @@ window.FirebaseAPI = {
 
     async init() {
         this.userId = await getUserId();
-        console.log("Firebase initialisiert für User:", this.userId);
+
+        // Logger verwenden, falls verfügbar
+        if (window.logger) {
+            await window.logger.info("Firebase initialized", { userId: this.userId });
+        }
         return this.userId;
     },
 
     async load() {
         if (!this.userId) await this.init();
-        const snapshot = await db.collection('users').doc(this.userId)
-        .collection('sentences')
-        .orderBy('timestamp', 'desc')
-        .get();
 
-        const sentences = [];
-        snapshot.forEach(doc => {
-            sentences.push({
-                id: parseInt(doc.id),
-                           ...doc.data()
+        try {
+            const snapshot = await db.collection('users').doc(this.userId)
+            .collection('sentences')
+            .orderBy('timestamp', 'desc')
+            .get();
+
+            const sentences = [];
+            snapshot.forEach(doc => {
+                sentences.push({
+                    id: parseInt(doc.id),
+                               ...doc.data()
+                });
             });
-        });
-        return sentences;
+            return sentences;
+        } catch (error) {
+            console.error("FirebaseAPI.load Fehler:", error);
+            if (window.logger) {
+                await window.logger.error("FirebaseAPI.load error", { message: error.message });
+            }
+            return [];
+        }
     },
 
     async add(sentence) {
         if (!this.userId) await this.init();
-        await db.collection('users').doc(this.userId)
-        .collection('sentences')
-        .doc(sentence.id.toString())
-        .set({
-            text: sentence.text,
-            website: sentence.website,
-            title: sentence.title,
-            url: sentence.url,
-            timestamp: sentence.timestamp,
-            language: sentence.language,
-            createdAt: new Date().toISOString()
-        });
-        return true;
+
+        try {
+            await db.collection('users').doc(this.userId)
+            .collection('sentences')
+            .doc(sentence.id.toString())
+            .set({
+                text: sentence.text,
+                website: sentence.website,
+                title: sentence.title,
+                url: sentence.url,
+                timestamp: sentence.timestamp,
+                language: sentence.language,
+                createdAt: new Date().toISOString()
+            });
+            return true;
+        } catch (error) {
+            console.error("FirebaseAPI.add Fehler:", error);
+            if (window.logger) {
+                await window.logger.error("FirebaseAPI.add error", { message: error.message });
+            }
+            return false;
+        }
     },
 
     async update(id, updates) {
         if (!this.userId) await this.init();
-        await db.collection('users').doc(this.userId)
-        .collection('sentences')
-        .doc(id.toString())
-        .update(updates);
-        return true;
+
+        try {
+            await db.collection('users').doc(this.userId)
+            .collection('sentences')
+            .doc(id.toString())
+            .update(updates);
+            return true;
+        } catch (error) {
+            console.error("FirebaseAPI.update Fehler:", error);
+            return false;
+        }
     },
 
     async delete(id) {
-        if (!this.userId) await this.init();
-        await db.collection('users').doc(this.userId)
-        .collection('sentences')
-        .doc(id.toString())
-        .delete();
-        return true;
+        const deleteId = Date.now();
+
+        if (!this.userId) {
+            await this.init();
+        }
+
+        try {
+            const docRef = db.collection('users').doc(this.userId)
+            .collection('sentences')
+            .doc(id.toString());
+
+            // Timeout, um zu sehen ob es hängt
+            const deletePromise = docRef.delete();
+            const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("DELETE TIMEOUT nach 5 Sekunden")), 5000)
+            );
+
+            await Promise.race([deletePromise, timeoutPromise]);
+
+            return true;
+
+        } catch (error) {
+            console.error(`FirebaseAPI.delete[${deleteId}] - FEHLER:`, error);
+            if (window.logger) {
+                await window.logger.error(`FirebaseAPI.delete Fehler`, {
+                    id,
+                    message: error.message,
+                    stack: error.stack
+                });
+            }
+            return false;
+        }
     },
 
     async deleteAll() {
         if (!this.userId) await this.init();
-        const snapshot = await db.collection('users').doc(this.userId)
-        .collection('sentences')
-        .get();
 
-        const batch = db.batch();
-        snapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-        await batch.commit();
-        return true;
+        try {
+            const snapshot = await db.collection('users').doc(this.userId)
+            .collection('sentences')
+            .get();
+
+            const batch = db.batch();
+            snapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+            return true;
+        } catch (error) {
+            console.error("FirebaseAPI.deleteAll Fehler:", error);
+            return false;
+        }
     },
 
     subscribe(callback) {
@@ -109,6 +169,8 @@ window.FirebaseAPI = {
                 });
             });
             callback(sentences);
+        }, (error) => {
+            console.error("FirebaseAPI.subscribe Fehler:", error);
         });
     }
 };

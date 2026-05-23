@@ -1,6 +1,14 @@
 // popup.js - OHNE Module, alles global
 let currentSentences = [];
 
+// Warten, bis Logger initialisiert ist
+(async () => {
+    if (window.logger) {
+        await window.logger.init();
+        await window.logger.info("popup.js started", { timestamp: Date.now() });
+    }
+})();
+
 // Initial laden
 document.addEventListener("DOMContentLoaded", async () => {
     // Firebase initialisieren
@@ -323,17 +331,122 @@ async function importFromJSON(event) {
     document.getElementById("importFileInput").value = "";
 }
 
+// Benutzerdefinierter Bestätigungsdialog (ersetzt confirm)
+function showConfirmDialog(message, onConfirm, onCancel) {
+    // Existing overlay entfernen (falls vorhanden)
+    const existingOverlay = document.querySelector('.modal-overlay');
+    if (existingOverlay) existingOverlay.remove();
+
+    // Overlay erstellen
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+
+    // Dialog HTML
+    overlay.innerHTML = `
+    <div class="modal-dialog">
+    <p>${message}</p>
+    <div class="modal-buttons">
+    <button class="confirm-btn">Löschen</button>
+    <button class="cancel-btn">Abbrechen</button>
+    </div>
+    </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Event-Listener
+    const confirmBtn = overlay.querySelector('.confirm-btn');
+    const cancelBtn = overlay.querySelector('.cancel-btn');
+
+    const cleanup = () => {
+        overlay.remove();
+        confirmBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+    };
+
+    const handleConfirm = () => {
+        cleanup();
+        if (onConfirm) onConfirm();
+    };
+
+        const handleCancel = () => {
+            cleanup();
+            if (onCancel) onCancel();
+        };
+
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+
+            // Klick auf Overlay = Abbrechen
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    handleCancel();
+                }
+            });
+}
+
 async function deleteSentence(id) {
-    if (confirm("Diese Zeile wirklich löschen?")) {
-        await FirebaseAPI.delete(id);
-        showStatus("✅ Gelöscht");
+    const functionId = Date.now();
+
+    try {
+        // ID-Validierung
+        if (!id || typeof id !== 'number') {
+            await window.logger.error(`deleteSentence[${functionId}] - Invalid ID`, { id });
+            showStatus("❌ Ungültige ID");
+            return;
+        }
+
+        // Wrapper, um den Dialog in ein Promise zu packen
+        const userConfirmed = await new Promise((resolve) => {
+            showConfirmDialog(
+                "Diesen Satz wirklich löschen?",
+                () => resolve(true),   // OK
+                              () => resolve(false)   // Cancel
+            );
+        });
+
+        if (!userConfirmed) {
+            return;
+        }
+
+        if (!window.FirebaseAPI || typeof window.FirebaseAPI.delete !== 'function') {
+            throw new Error("FirebaseAPI.delete is not available");
+        }
+
+        // Löschen
+        const success = await window.FirebaseAPI.delete(id);
+
+        if (success) {
+            showStatus("✅ Gelöscht");
+            currentSentences = currentSentences.filter(s => s.id !== id);
+            renderTable();
+            updateStatus();
+        } else {
+            showStatus("❌ Löschen fehlgeschlagen");
+        }
+    } catch (error) {
+        await window.logger.error(`deleteSentence[${functionId}] - CATCH BLOCK`, {
+            message: error.message,
+            stack: error.stack
+        });
+        showStatus("❌ Fehler: " + error.message);
     }
 }
 
 async function deleteAllSentences() {
-    if (confirm("⚠️ ALLE Sätze löschen? Diese Aktion kann nicht rückgängig gemacht werden!")) {
+    // Benutzerdefinierten Dialog verwenden
+    const userConfirmed = await new Promise((resolve) => {
+        showConfirmDialog(
+            "⚠️ ALLE Sätze löschen? Diese Aktion kann nicht rückgängig gemacht werden!",
+            () => resolve(true),
+                          () => resolve(false)
+        );
+    });
+
+    if (userConfirmed) {
         await FirebaseAPI.deleteAll();
         showStatus("✅ Alle Sätze gelöscht");
+        await loadAndRender();
     }
 }
 
