@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sentence Mining Helper</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <h1>⛏️ Sentence Mining Helper</h1>
+
+        <div class="toolbar">
+            <button id="copyAllTextsBtn">📋 Alle Sätze kopieren</button>
+            <button id="copyFullTableBtn">📊 Komplette Tabelle (CSV)</button>
+            <button id="exportJsonBtn" class="export">💾 Export (JSON)</button>
+            <button id="importJsonBtn" class="import">📂 Import (JSON)</button>
+            <button id="deleteAllBtn" class="danger">🗑️ Komplette Tabelle löschen</button>
+            <button id="refreshBtn">🔄 Aktualisieren</button>
+        </div>
+
+        <!-- Verstecktes File-Input für Import -->
+        <input type="file" id="importFileInput" accept=".json" style="display: none;">
+
+        <div class="table-container">
+            <table id="sentencesTable">
+                <thead>
+                    <tr>
+                        <th>Aktionen</th>
+                        <th>Text</th>
+                        <th>Website</th>
+                        <th>Titel</th>
+                        <th>Link</th>
+                        <th>Datum</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="6">Lade Sätze...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <!-- Lokale Firebase Skripte (KEINE externen URLs mehr) -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-app-compat.js"></script>
+    <script src="firebase-firestore-compat.js"></script>
+    <script src="firebase-loader.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>

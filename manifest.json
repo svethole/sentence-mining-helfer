@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Sentence Mining Helper",
+  "version": "2.0.0",
+  "description": "Sammle Sätze beim Lesen mit Firebase Cloud-Sync",
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "https://firestore.googleapis.com/*",
+    "https://*.firebaseio.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Sentence Mining Helper"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["firebase-config.js", "firebase-loader.js", "firebase-app-compat.js", "firebase-firestore-compat.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
