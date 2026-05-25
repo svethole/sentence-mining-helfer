@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>System Info</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            max-width: 800px;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        h2 {
+            margin: 0 0 20px 0;
+            color: #fff;
+            font-size: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .section-header {
+            margin: 20px 0 10px 0;
+            color: #9cdcfe;
+            font-size: 16px;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            padding: 0;
+        }
+
+        .section-header:hover {
+            opacity: 0.8;
+        }
+
+        .toggle-icon {
+            font-size: 14px;
+            width: 20px;
+            display: inline-block;
+        }
+
+        .info-section {
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .info-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #3d3d3d;
+            font-size: 13px;
+            flex-wrap: wrap;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            width: 150px;
+            font-weight: 600;
+            color: #9cdcfe;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            flex: 1;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .info-value pre {
+            margin: 0;
+            white-space: pre-wrap;
+            background: #1e1e1e;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .tree-view {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+
+        .tree-node {
+            margin-left: 20px;
+            cursor: pointer;
+        }
+
+        .tree-node.collapsed .tree-children {
+            display: none;
+        }
+
+        .tree-key {
+            color: #9cdcfe;
+        }
+
+        .tree-value {
+            color: #ce9178;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .stat-card {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #4ec9b0;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #858585;
+            margin-top: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        button:hover {
+            background: #1177bb;
+        }
+
+        button.danger {
+            background: #a1260d;
+        }
+
+        button.danger:hover {
+            background: #c42b1a;
+        }
+
+        button.info {
+            background: #6c3483;
+        }
+
+        button.info:hover {
+            background: #512e5f;
+        }
+
+        .copy-btn {
+            background: #3d3d3d;
+            padding: 2px 8px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .copy-btn:hover {
+            background: #4d4d4d;
+        }
+
+        .status {
+            background: #2d2d2d;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #4ec9b0;
+        }
+
+        .section-content {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔧 System Informationen</h2>
+
+        <!-- Grundlegende Infos -->
+        <div class="info-section">
+            <button class="section-header" data-section="basicInfo">
+                <span class="toggle-icon">▼</span> ℹ️ Grundlegende Informationen
+            </button>
+            <div id="basicInfo" class="section-content">
+                <div class="info-row">
+                    <div class="info-label">Extension ID:</div>
+                    <div class="info-value" id="extensionId">-</div>
+                    <button class="copy-btn" data-copy="extensionId">Kopieren</button>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Public Key:</div>
+                    <div class="info-value" id="publicKey">-</div>
+                    <button class="copy-btn" data-copy="publicKey">Kopieren</button>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Extension Version:</div>
+                    <div class="info-value" id="extensionVersion">-</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">User ID (Firebase):</div>
+                    <div class="info-value" id="firebaseUserId">-</div>
+                    <button class="copy-btn" data-copy="firebaseUserId">Kopieren</button>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Geräte-ID:</div>
+                    <div class="info-value" id="deviceId">-</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Browser:</div>
+                    <div class="info-value" id="browserInfo">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sync-Status -->
+        <div class="info-section">
+            <button class="section-header" data-section="syncInfo">
+                <span class="toggle-icon">▼</span> 🔄 Synchronisations-Status
+            </button>
+            <div id="syncInfo" class="section-content">
+                <div class="info-row">
+                    <div class="info-label">Chrome Sync:</div>
+                    <div class="info-value" id="syncStatus">Prüfe...</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Firebase Verbindung:</div>
+                    <div class="info-value" id="firebaseStatus">Prüfe...</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Letzte Sync:</div>
+                    <div class="info-value" id="lastSync">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datenbank-Statistiken -->
+        <div class="info-section">
+            <button class="section-header" data-section="stats">
+                <span class="toggle-icon">▼</span> 📊 Datenbank-Statistiken
+            </button>
+            <div id="stats" class="section-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="sentenceCount">-</div>
+                        <div class="stat-label">Gespeicherte Sätze</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="storageUsed">-</div>
+                        <div class="stat-label">Sync-Speicher genutzt</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="oldestSentence">-</div>
+                        <div class="stat-label">Ältester Satz (Tage)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="newestSentence">-</div>
+                        <div class="stat-label">Neuester Satz (Stunden)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Firebase Konfiguration (Baumansicht) -->
+        <div class="info-section">
+            <button class="section-header" data-section="firebaseConfig">
+                <span class="toggle-icon">▼</span> 🔥 Firebase Konfiguration
+            </button>
+            <div id="firebaseConfig" class="section-content">
+                <div id="firebaseConfigTree" class="tree-view">Lade...</div>
+            </div>
+        </div>
+
+        <!-- Chrome Storage Inhalt (geklappt) -->
+        <div class="info-section">
+            <button class="section-header" data-section="storageContent">
+                <span class="toggle-icon">▶</span> 📦 Chrome Storage Inhalt
+            </button>
+            <div id="storageContent" class="section-content" style="display: none;">
+                <div id="storageTree" class="tree-view">Lade...</div>
+            </div>
+        </div>
+
+        <!-- Debugging-Tools -->
+        <div class="info-section">
+            <button class="section-header" data-section="debugTools">
+                <span class="toggle-icon">▶</span> 🛠️ Debugging-Tools
+            </button>
+            <div id="debugTools" class="section-content" style="display: none;">
+                <div class="button-group">
+                    <button id="exportLogsBtn">📤 Exportiere Logs</button>
+                    <button id="clearLogsBtn">🗑️ Logs löschen</button>
+                    <button id="forceResyncBtn">🔄 Force Resync</button>
+                    <button id="testNotificationBtn">🔔 Test Benachrichtigung</button>
+                </div>
+                <div class="button-group">
+                    <button id="copyAllInfoBtn">📋 Alle Infos kopieren</button>
+                    <button id="exportSystemReportBtn">📄 System-Report exportieren</button>
+                </div>
+                <div id="debugStatus" class="status"></div>
+            </div>
+        </div>
+
+        <div id="statusMessage" class="status"></div>
+    </div>
+
+    <script src="logger.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="firebase-app-compat.js"></script>
+    <script src="firebase-firestore-compat.js"></script>
+    <script src="firebase-loader.js"></script>
+    <script src="info_overlay.js"></script>
+</body>
+</html>
