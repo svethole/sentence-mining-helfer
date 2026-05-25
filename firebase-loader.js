@@ -4,15 +4,13 @@
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// User ID Funktion
+// FESTE User-ID für ALLE Geräte
+const FIXED_USER_ID = "svetho"; // Beliebig, aber fest!
+
 async function getUserId() {
-    let result = await chrome.storage.sync.get(["firebaseUserId"]);
-    if (!result.firebaseUserId) {
-        const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        await chrome.storage.sync.set({ firebaseUserId: userId });
-        return userId;
-    }
-    return result.firebaseUserId;
+    // KEINE Zufallsgenerierung mehr!
+    // KEIN Speichern in chrome.storage.sync!
+    return FIXED_USER_ID;
 }
 
 // Firebase API für andere Skripte
@@ -151,27 +149,56 @@ window.FirebaseAPI = {
         }
     },
 
-    subscribe(callback) {
+    subscribe(callback, usePolling = true) {
         if (!this.userId) {
-            this.init().then(() => this.subscribe(callback));
+            this.init().then(() => this.subscribe(callback, usePolling));
             return;
         }
 
-        return db.collection('users').doc(this.userId)
-        .collection('sentences')
-        .orderBy('timestamp', 'desc')
-        .onSnapshot(snapshot => {
-            const sentences = [];
-            snapshot.forEach(doc => {
-                sentences.push({
-                    id: parseInt(doc.id),
-                               ...doc.data()
+        if (usePolling) {
+            // Fallback: Manuelles Polling alle 10 Sekunden
+            console.log("FirebaseAPI.subscribe: Verwende Polling-Modus (10s Intervall)");
+
+            // Erstes Laden
+            this.load().then(callback);
+
+            // Regelmäßiges Polling
+            const intervalId = setInterval(async () => {
+                const sentences = await this.load();
+                callback(sentences);
+            }, 10000);
+
+            // Speichere die Interval-ID für cleanup
+            this.pollingInterval = intervalId;
+
+            // Return unsubscribe-Funktion
+            return () => clearInterval(intervalId);
+
+        } else {
+            // Original: WebSocket (Real-time)
+            console.log("FirebaseAPI.subscribe: Verwende WebSocket-Modus (Echtzeit)");
+
+            return db.collection('users').doc(this.userId)
+            .collection('sentences')
+            .orderBy('timestamp', 'desc')
+            .onSnapshot(snapshot => {
+                const sentences = [];
+                snapshot.forEach(doc => {
+                    sentences.push({
+                        id: parseInt(doc.id),
+                                   ...doc.data()
+                    });
                 });
+                callback(sentences);
+            }, (error) => {
+                console.error("FirebaseAPI.subscribe WebSocket Fehler:", error);
+                // Bei WebSocket-Fehler automatisch auf Polling umschalten
+                if (!this.pollingInterval) {
+                    console.log("WebSocket fehlgeschlagen, wechsle zu Polling-Modus");
+                    this.subscribe(callback, true);
+                }
             });
-            callback(sentences);
-        }, (error) => {
-            console.error("FirebaseAPI.subscribe Fehler:", error);
-        });
+        }
     }
 };
 
