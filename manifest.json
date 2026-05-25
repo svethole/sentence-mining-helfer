@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Sentence Mining Helper",
-  "version": "2.0.0",
+  "version": "3.0.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxKjFAdZ3P7f6fWky7+6e/rscZfgtYwYvm4ROuHX5LyG5k7fjYmjH0T929qPxo8Nn7WlMsmbY5BASTmBsRCmpm2GtruMGI10OFMS5+le7SAL/RMUZ6XmyhGq2YD/ZzGWpdfxDzQaGhMEhYki2W7kI+6H0IiGmpiam/WZLoMbCTcm6gdli2qGhnN3CArMhOcp52JEnuW1rs+s0DDnh27AuitqKEsVPLZFIm7mfU0NF9cyOCHPAlgdxw7ZEcyVz6az/aQqLOj09/53pKZ3iSOn1k8TDxZRrsmGGqKiUe14KrQrZV9AtZB/RLGWT65hBshJ2EGMgIkasuqiEOPscKJozrwIDAQAB",
   "description": "Sammle Sätze beim Lesen mit Firebase Cloud-Sync",
   "permissions": [
     "contextMenus",
