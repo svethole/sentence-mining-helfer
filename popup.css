@@ -73,6 +73,16 @@ button.import:hover {
     background: #7d3c98;
 }
 
+button.info {
+    background: #6c3483;
+    color: white;
+    border-color: #6c3483;
+}
+
+button.info:hover {
+    background: #512e5f;
+}
+
 .table-container {
     flex: 1;
     overflow: auto;

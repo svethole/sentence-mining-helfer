@@ -40,6 +40,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("importFileInput").addEventListener("change", importFromJSON);
     document.getElementById("deleteAllBtn").addEventListener("click", deleteAllSentences);
     document.getElementById("refreshBtn").addEventListener("click", () => loadAndRender());
+    // Event-Listener für Info-Button
+    document.getElementById("infoBtn").addEventListener("click", () => {
+        chrome.windows.create({
+            url: chrome.runtime.getURL("info_overlay.html"),
+                              type: "popup",
+                              width: 900,
+                              height: 800
+        });
+    });
 });
 
 async function importPendingSentences() {

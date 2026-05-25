@@ -18,3 +18,5 @@ npm-debug.log*
 # Temporäre Dateien
 *.tmp
 *.temp
+
+*.pem
