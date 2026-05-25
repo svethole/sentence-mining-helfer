@@ -11,44 +11,55 @@ let currentSentences = [];
 
 // Initial laden
 document.addEventListener("DOMContentLoaded", async () => {
-    // Firebase initialisieren
-    if (window.FirebaseAPI) {
-        await FirebaseAPI.init();
-        showStatus("☁️ Firebase verbunden");
+    try {
+        // Firebase initialisieren
+        if (window.FirebaseAPI) {
+            await FirebaseAPI.init();
+            showStatus("☁️ Firebase verbunden");
 
-        // Echtzeit-Sync
-        FirebaseAPI.subscribe((sentences) => {
-            currentSentences = sentences;
-            renderTable();
-            updateStatus();
+            // Echtzeit-Sync
+            FirebaseAPI.subscribe((sentences) => {
+                currentSentences = sentences;
+                renderTable();
+                updateStatus();
+            });
+        }
+
+        // Gespeicherte Sätze laden
+        await loadAndRender();
+
+        // Pending Sentences aus background.js importieren
+        await importPendingSentences();
+
+        // Buttons
+        document.getElementById("copyAllTextsBtn").addEventListener("click", copyAllTexts);
+        document.getElementById("copyFullTableBtn").addEventListener("click", copyFullTable);
+        document.getElementById("exportJsonBtn").addEventListener("click", exportToJSON);
+        document.getElementById("importJsonBtn").addEventListener("click", () => {
+            document.getElementById("importFileInput").click();
         });
+        document.getElementById("importFileInput").addEventListener("change", importFromJSON);
+        document.getElementById("deleteAllBtn").addEventListener("click", deleteAllSentences);
+        document.getElementById("refreshBtn").addEventListener("click", () => loadAndRender());
+        document.getElementById("settingsBtn").addEventListener("click", openSettings);
+        // Event-Listener für Info-Button
+        document.getElementById("infoBtn").addEventListener("click", () => {
+            chrome.windows.create({
+                url: chrome.runtime.getURL("info_overlay.html"),
+                                type: "popup",
+                                width: 900,
+                                height: 800
+            });
+        });
+    } catch (error) {
+        if (error.message === "NO_USER_ID_CONFIGURED") {
+            console.log("Setup wird benötigt");
+            showStatus("⚙️ Bitte konfiguriere zuerst deine User-ID im Setup-Fenster");
+        } else {
+            console.error("Initialisierungsfehler:", error);
+            showStatus("❌ Fehler: " + error.message);
+        }
     }
-
-    // Gespeicherte Sätze laden
-    await loadAndRender();
-
-    // Pending Sentences aus background.js importieren
-    await importPendingSentences();
-
-    // Buttons
-    document.getElementById("copyAllTextsBtn").addEventListener("click", copyAllTexts);
-    document.getElementById("copyFullTableBtn").addEventListener("click", copyFullTable);
-    document.getElementById("exportJsonBtn").addEventListener("click", exportToJSON);
-    document.getElementById("importJsonBtn").addEventListener("click", () => {
-        document.getElementById("importFileInput").click();
-    });
-    document.getElementById("importFileInput").addEventListener("change", importFromJSON);
-    document.getElementById("deleteAllBtn").addEventListener("click", deleteAllSentences);
-    document.getElementById("refreshBtn").addEventListener("click", () => loadAndRender());
-    // Event-Listener für Info-Button
-    document.getElementById("infoBtn").addEventListener("click", () => {
-        chrome.windows.create({
-            url: chrome.runtime.getURL("info_overlay.html"),
-                              type: "popup",
-                              width: 900,
-                              height: 800
-        });
-    });
 });
 
 async function importPendingSentences() {
@@ -77,6 +88,15 @@ async function loadAndRender() {
 function updateStatus() {
     const statusDiv = document.getElementById("status");
     statusDiv.innerHTML = `☁️ Cloud: ${currentSentences.length} Sätze | Echtzeit-Sync aktiv`;
+}
+
+function openSettings() {
+    chrome.windows.create({
+        url: chrome.runtime.getURL("setup.html"),
+            type: "popup",
+            width: 550,
+            height: 600
+    });
 }
 
 function renderTable() {

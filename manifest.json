@@ -36,7 +36,14 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["firebase-config.js", "firebase-loader.js", "firebase-app-compat.js", "firebase-firestore-compat.js"],
+      "resources": [
+        "firebase-config.js",
+        "firebase-loader.js",
+        "firebase-app-compat.js",
+        "firebase-firestore-compat.js",
+        "setup.html",
+        "setup.js"
+      ],
       "matches": ["<all_urls>"]
     }
   ]
